@@ -201,6 +201,7 @@ class Bench:
                 timeout,
                 nodes=addresses
             )
+            print(cmd)
             self._background_run(host, cmd, log_file)
 
         # Run the nodes.

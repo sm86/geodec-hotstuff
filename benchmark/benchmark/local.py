@@ -87,6 +87,7 @@ class LocalBench:
                     rate_share,
                     timeout
                 )
+                print(cmd)
                 self._background_run(cmd, log_file)
 
             # Run the nodes.
