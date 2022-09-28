@@ -7,6 +7,7 @@ from time import sleep
 from math import ceil
 from os.path import join
 import subprocess
+import json
 
 from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError
 from benchmark.utils import BenchError, Print, PathMaker, progress_bar
@@ -92,18 +93,20 @@ class Bench:
         except GroupException as e:
             raise BenchError('Failed to kill nodes', FabricError(e))
 
-    def _select_hosts(self, bench_parameters):
-        nodes = max(bench_parameters.nodes)
+    def _select_hosts(self):
+        f = open('../../../IP.txt', 'r+')
+        addrs = [line.strip() for line in f.readlines()]
+        f.close()
+        return addrs
+        # # Ensure there are enough hosts.
+        # hosts = self.manager.hosts()
+        # if sum(len(x) for x in hosts.values()) < nodes:
+        #     return []
 
-        # Ensure there are enough hosts.
-        hosts = self.manager.hosts()
-        if sum(len(x) for x in hosts.values()) < nodes:
-            return []
-
-        # Select the hosts in different data centers.
-        ordered = zip(*hosts.values())
-        ordered = [x for y in ordered for x in y]
-        return ordered[:nodes]
+        # # Select the hosts in different data centers.
+        # ordered = zip(*hosts.values())
+        # ordered = [x for y in ordered for x in y]
+        # return ordered[:nodes]
 
     def _background_run(self, host, command, log_file):
         name = splitext(basename(log_file))[0]
@@ -252,7 +255,7 @@ class Bench:
             raise BenchError('Invalid nodes or bench parameters', e)
 
         # Select which hosts to use.
-        selected_hosts = self._select_hosts(bench_parameters)
+        selected_hosts = self._select_hosts()
         if not selected_hosts:
             Print.warn('There are not enough instances available')
             return

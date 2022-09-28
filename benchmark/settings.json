@@ -1,8 +1,8 @@
 {
     "testbed": "hotstuff",
     "key": {
-        "name": "aws",
-        "path": "/absolute/ssh/key/path"
+        "name": "msrg",
+        "path": "/home/ubuntu/.ssh/id_rsa"
     },
     "ports": {
         "consensus": 8000,
@@ -11,7 +11,7 @@
     },
     "repo": {
         "name": "hotstuff",
-        "url": "https://github.com/asonnino/hotstuff.git",
+        "url": "https://github.com/sm86/hotstuff.git",
         "branch": "main"
     },
     "instances": {
