@@ -213,6 +213,9 @@ impl Core {
         if let Some(qc) = self.aggregator.add_vote(vote.clone())? {
             debug!("Assembled {:?}", qc);
 
+            // NOTE: This log entry is used to compute performance.
+            info!("Voted on block {:?}", vote);
+            
             // Process the QC.
             self.process_qc(&qc).await;
 
@@ -349,7 +352,8 @@ impl Core {
             if next_leader == self.name {
                 self.handle_vote(&vote).await?;
             } else {
-                debug!("Sending {:?} to {}", vote, next_leader);
+                // changed log into info level for performance tests
+                info!("Sending {:?} to {}", vote, next_leader);
                 let address = self
                     .committee
                     .address(&next_leader)

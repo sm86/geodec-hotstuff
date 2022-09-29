@@ -7,7 +7,6 @@ from time import sleep
 from math import ceil
 from os.path import join
 import subprocess
-import json
 
 from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError
 from benchmark.utils import BenchError, Print, PathMaker, progress_bar
