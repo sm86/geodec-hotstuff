@@ -219,6 +219,12 @@ impl PartialEq for QC {
     }
 }
 
+impl fmt::Display for QC {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "Round:{}, {:?}", self.round, self.votes)
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Timeout {
     pub high_qc: QC,

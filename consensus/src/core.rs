@@ -140,7 +140,8 @@ impl Core {
         // Send all the newly committed blocks to the node's application layer.
         while let Some(block) = to_commit.pop_back() {
             if !block.payload.is_empty() {
-                info!("Committed {}", block);
+                info!("Committed {} created by {}", block, block.author);
+                info!("QC for block: {}", block.qc);
 
                 #[cfg(feature = "benchmark")]
                 for x in &block.payload {
@@ -213,9 +214,6 @@ impl Core {
         if let Some(qc) = self.aggregator.add_vote(vote.clone())? {
             debug!("Assembled {:?}", qc);
 
-            // NOTE: This log entry is used to compute performance.
-            info!("Voted on block {:?}", vote);
-            
             // Process the QC.
             self.process_qc(&qc).await;
 
