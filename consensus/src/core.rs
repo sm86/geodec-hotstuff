@@ -350,8 +350,7 @@ impl Core {
             if next_leader == self.name {
                 self.handle_vote(&vote).await?;
             } else {
-                // changed log into info level for performance tests
-                info!("Sending {:?} to {}", vote, next_leader);
+                debug!("Sending {:?} to {}", vote, next_leader);
                 let address = self
                     .committee
                     .address(&next_leader)
