@@ -101,7 +101,7 @@ def remote(ctx):
         'rate': [10_000],
         'tx_size': 512,
         'duration': 60,
-        'runs': 2,
+        'runs': 1,
     }
     node_params = {
         'consensus': {

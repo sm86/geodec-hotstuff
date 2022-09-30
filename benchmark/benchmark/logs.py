@@ -6,6 +6,7 @@ from re import findall, search
 from statistics import mean
 
 from benchmark.utils import Print
+from benchmark.geo_logs import GeoLogParser
 
 
 class ParseError(Exception):
@@ -242,4 +243,7 @@ class LogParser:
             with open(filename, 'r') as f:
                 nodes += [f.read()]
 
+        data = GeoLogParser.count_votes_props()
+        print(data)
+        
         return cls(clients, nodes, faults)
