@@ -4,7 +4,7 @@ from re import findall, search, match
 
 import pandas as pd
 
-from utils import PathMaker
+from benchmark.utils import PathMaker
 
 class GeoLogParser:
     @staticmethod
@@ -15,7 +15,9 @@ class GeoLogParser:
         for filename in sorted(glob(join(directory, 'node-*.log'))):
             with open(filename, 'r') as f:
                 data = f.read()
+                print(filename)
                 addr = findall(r'Node (?P<round>\w+) successfully booted', data)
+                print(addr)
                 addresses.append(addr[0])
                 prop = findall(r'\[(.*Z) .* Created B\d+ -> ([^ ]+=)', data)
                 proposals.append(len(prop))
