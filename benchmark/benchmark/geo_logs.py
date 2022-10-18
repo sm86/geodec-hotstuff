@@ -1,6 +1,6 @@
 from glob import glob
 from os.path import join
-from re import findall, search, match
+from re import findall, split
 
 import pandas as pd
 
