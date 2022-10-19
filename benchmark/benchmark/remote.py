@@ -94,7 +94,7 @@ class Bench:
             raise BenchError('Failed to kill nodes', FabricError(e))
 
     def _select_hosts(self):
-        f = open(self.settings.ip_file, 'r+')
+        f = open('../../IP.txt', 'r+')
         addrs = [line.strip() for line in f.readlines()]
         f.close()
         return addrs
