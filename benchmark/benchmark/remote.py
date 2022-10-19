@@ -275,7 +275,7 @@ class Bench:
         # Set delay parameters.
         try:
             self._configDelay(selected_hosts)
-            self._addDelays(self, servers, pingDelays, self.settings.interface)
+            self._addDelays(servers, pingDelays, self.settings.interface)
         except (subprocess.SubprocessError, GroupException) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
             Print.error(BenchError('Failed to initalize delays', e))
