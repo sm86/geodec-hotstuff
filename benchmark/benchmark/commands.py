@@ -23,6 +23,14 @@ class CommandMaker:
     def generate_key(filename):
         assert isinstance(filename, str)
         return f'./node keys --filename {filename}'
+    
+    @staticmethod
+    def initalizeDelayQDisc(interface):
+        return (f'sudo tc qdisc add dev {interface} parent root handle 1:0 htb default 100')
+    
+    @staticmethod
+    def deleteDelayQDisc(interface):
+        return (f'sudo tc qdisc del dev {interface} parent root')
 
     @staticmethod
     def run_node(keys, committee, store, parameters, debug=False):

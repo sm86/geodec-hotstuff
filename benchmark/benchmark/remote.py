@@ -177,6 +177,12 @@ class Bench:
             c.put(PathMaker.parameters_file(), '.')
 
         return committee
+    
+    def _configDelay(self, hosts):
+        Print.info('Delay qdisc initalization...')
+        cmd = CommandMaker.initalizeDelayQDisc('ens3')
+        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+        g.run(cmd, hide=True)
 
     def _run_single(self, hosts, rate, bench_parameters, node_parameters, debug=False):
         Print.info('Booting testbed...')
@@ -265,7 +271,14 @@ class Bench:
         except (GroupException, ExecutionError) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
-
+        
+        # Set delay paramters.
+        try:
+            self._configDelay(selected_hosts)
+        except (subprocess.SubprocessError, GroupException) as e:
+            e = FabricError(e) if isinstance(e, GroupException) else e
+            Print.error(BenchError('Failed to initalize delays', e))
+         
         # Run benchmarks.
         for n in bench_parameters.nodes:
             for r in bench_parameters.rate:
