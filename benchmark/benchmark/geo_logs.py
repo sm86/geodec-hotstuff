@@ -6,6 +6,12 @@ import pandas as pd
 
 from benchmark.utils import PathMaker
 
+#########################################################################################
+#########################################################################################
+#### GeoDec emulator to study impacts of geospatial diversity on blockchain networks ####
+############# Created by Shashank Motepalli, Arno Jacobsen ##############################
+#########################################################################################
+#########################################################################################
 class GeoLogParser:
     @staticmethod
     def count_votes_props():

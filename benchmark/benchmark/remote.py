@@ -13,6 +13,7 @@ from benchmark.utils import BenchError, Print, PathMaker, progress_bar
 from benchmark.commands import CommandMaker
 from benchmark.logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
+from benchmark.geodec import GeoDec
 
 
 class FabricError(Exception):
@@ -93,7 +94,7 @@ class Bench:
             raise BenchError('Failed to kill nodes', FabricError(e))
 
     def _select_hosts(self):
-        f = open('../../IP.txt', 'r+')
+        f = open(self.settings.ip_file, 'r+')
         addrs = [line.strip() for line in f.readlines()]
         f.close()
         return addrs
@@ -177,12 +178,6 @@ class Bench:
             c.put(PathMaker.parameters_file(), '.')
 
         return committee
-    
-    def _configDelay(self, hosts):
-        Print.info('Delay qdisc initalization...')
-        cmd = CommandMaker.initalizeDelayQDisc('ens3')
-        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
-        g.run(cmd, hide=True)
 
     def _run_single(self, hosts, rate, bench_parameters, node_parameters, debug=False):
         Print.info('Booting testbed...')
@@ -272,9 +267,15 @@ class Bench:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
         
-        # Set delay paramters.
+        # test GeoInput  
+        geoInput = {1: 1, 3: 1, 4: 1, 10: 1}    
+        geodec = GeoDec()
+        servers = geodec.getAllServers(geoInput, self.settings.servers_file, self.settings.ip_file)
+        pingDelays = geodec.getPingDelay(geoInput, self.settings.ping_grouped_file, self.settings.pings_file)
+        # Set delay parameters.
         try:
             self._configDelay(selected_hosts)
+            self._addDelays(self, servers, pingDelays, self.settings.interface)
         except (subprocess.SubprocessError, GroupException) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
             Print.error(BenchError('Failed to initalize delays', e))
@@ -313,3 +314,41 @@ class Bench:
                             e = FabricError(e)
                         Print.error(BenchError('Benchmark failed', e))
                         continue
+        
+        # Delte delay parameters.
+        try:
+            self._deleteDelay(selected_hosts)
+        except (subprocess.SubprocessError, GroupException) as e:
+            e = FabricError(e) if isinstance(e, GroupException) else e
+            Print.error(BenchError('Failed to initalize delays', e))
+            
+    ################ GEODEC Emulator methods #########################
+    def _configDelay(self, hosts):
+        Print.info('Delay qdisc initalization...')
+        cmd = CommandMaker.initalizeDelayQDisc(self.settings.interface)
+        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+        g.run(cmd, hide=True)
+
+    def _deleteDelay(self, hosts):
+        Print.info('Delete qdisc configurations...')
+        cmd = CommandMaker.deleteDelayQDisc(self.settings.interface)
+        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+        g.run(cmd, hide=True)
+
+    def _addDelays(self, servers, pingDelays, interface):
+        for index, source in servers.iterrows():
+            source_commands = ''
+            counter = 1
+            for index, destination in servers.iterrows():
+                if source['id'] != destination['id']:
+                    query = 'source == ' + str(source['id']) + ' and destination == '+ str(destination['id'])
+                    delay_data = pingDelays.query(query) 
+                    delay = delay_data['avg'].values.astype(float)[0]
+                    delay_dev = delay_data['mdev'].values.astype(float)[0]
+                    cmd = self.getDelayCommand(counter, destination['ip'], interface, delay/2, delay_dev/2)
+                    source_commands = source_commands + cmd
+                    counter = counter + 1
+            host = source['ip']
+            # execute the command for source IP
+            c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
+            c.run(source_commands, hide=True)

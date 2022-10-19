@@ -33,6 +33,10 @@ class CommandMaker:
         return (f'sudo tc qdisc del dev {interface} parent root')
 
     @staticmethod
+    def getDelayCommand(n, ip, interface, delay, delay_dev):
+        return (f'sudo tc class add dev {interface} parent 1:0 classid 1:{n+1} htb rate 1000kbit; sudo tc filter add dev {interface} parent 1:0 protocol ip u32 match ip dst {ip} flowid 1:{n}; sudo tc qdisc add dev {interface} parent 1:{n} handle {n*10}:0 netem delay {delay}ms {delay_dev}ms; ')
+
+    @staticmethod
     def run_node(keys, committee, store, parameters, debug=False):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
