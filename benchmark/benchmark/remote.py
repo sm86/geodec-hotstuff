@@ -270,8 +270,8 @@ class Bench:
         # test GeoInput  
         geoInput = {1: 1, 3: 1, 4: 1, 10: 1}    
         geodec = GeoDec()
-        servers = geodec.getAllServers(geoInput, self.settings.servers_file, self.settings.ip_file)
-        pingDelays = geodec.getPingDelay(geoInput, self.settings.ping_grouped_file, self.settings.pings_file)
+        servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
+        pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
         # Set delay parameters.
         try:
             self._configDelay(selected_hosts)
