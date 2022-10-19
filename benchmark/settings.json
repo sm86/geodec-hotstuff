@@ -14,6 +14,13 @@
         "url": "https://github.com/sm86/hotstuff.git",
         "branch": "main"
     },
+    "geodec": {
+        "interface": "ens3", 
+        "servers_file" : "/home/ubuntu/data/servers-2020-07-19.csv", 
+        "ip_file" : "/home/ubuntu/IP.txt", 
+        "pings_grouped_file" : "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", 
+        "pings_file" : "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv"
+    },
     "instances": {
         "type": "m5d.8xlarge",
         "regions": [
