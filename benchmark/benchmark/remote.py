@@ -93,11 +93,11 @@ class Bench:
         except GroupException as e:
             raise BenchError('Failed to kill nodes', FabricError(e))
 
-    def _select_hosts(self):
+    def _select_hosts(self, len):
         f = open('../../IP.txt', 'r+')
         addrs = [line.strip() for line in f.readlines()]
         f.close()
-        return addrs
+        return addrs[:len]
         # # Ensure there are enough hosts.
         # hosts = self.manager.hosts()
         # if sum(len(x) for x in hosts.values()) < nodes:
@@ -254,8 +254,14 @@ class Bench:
         except ConfigError as e:
             raise BenchError('Invalid nodes or bench parameters', e)
 
+        # test GeoInput  
+        geoInput = {1: 1, 3: 1, 4: 1, 10: 1}    
+        geodec = GeoDec()
+        servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
+        pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
+
         # Select which hosts to use.
-        selected_hosts = self._select_hosts()
+        selected_hosts = self._select_hosts(len(servers))
         if not selected_hosts:
             Print.warn('There are not enough instances available')
             return
@@ -267,11 +273,6 @@ class Bench:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
         
-        # test GeoInput  
-        geoInput = {1: 1, 3: 1, 4: 1, 10: 1}    
-        geodec = GeoDec()
-        servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
-        pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
         # Set delay parameters.
         try:
             self._configDelay(selected_hosts)
