@@ -18,7 +18,9 @@ class GeoLogParser:
         directory = PathMaker.logs_path()
         addresses = []
         proposals = []
+        node_num = []
         for filename in sorted(glob(join(directory, 'node-*.log'))):
+            node_num.append(int(filename.split('-')[1].split('.')[0]))
             with open(filename, 'r') as f:
                 data = f.read()
                 addr_line = findall(r'Node .* successfully booted', data)
@@ -39,6 +41,7 @@ class GeoLogParser:
         votes_data = pd.DataFrame(
             {'address': addresses,
             'votes': votes,
-            'proposals': proposals
+            'proposals': proposals,
+            'node_num' : node_num
             })
         return votes_data

@@ -32,7 +32,11 @@ class GeoDec:
                 updated = pd.concat([updated, data], ignore_index = True)
                 num = num - 1
         # adding IP address to servers
-        return self._addIPtoServers(updated, ip_file)
+        updated = self._addIPtoServers(updated)
+        # calculate geospatial diversity index
+        valGDI = self._calculateGDI(updated)
+        return pd.merge(updated, valGDI, on='name')
+
 
     def _addIPtoServers(self, servers, ip_file):
         serversIP = servers
@@ -63,7 +67,7 @@ class GeoDec:
 
 
     ### GDI (GeoSpatial Diversity Index) CALCULATION
-    def calculateGDI(self, servers): 
+    def _calculateGDI(self, servers): 
         dist_matrix = self._getDistanceMatrix(servers)
         servers = list(dist_matrix.columns)
         two_third_threshold = math.ceil(len(servers) * (2/3))

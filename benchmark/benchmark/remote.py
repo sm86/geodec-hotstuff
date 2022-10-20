@@ -7,6 +7,7 @@ from time import sleep
 from math import ceil
 from os.path import join
 import subprocess
+import pandas as pd
 
 from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError
 from benchmark.utils import BenchError, Print, PathMaker, progress_bar
@@ -227,10 +228,12 @@ class Bench:
             sleep(ceil(duration / 20))
         self.kill(hosts=hosts, delete_logs=False)
 
-    def _logs(self, hosts, faults):
+    def _logs(self, hosts, faults, servers):
         # Delete local logs (if any).
         cmd = CommandMaker.clean_logs()
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+
+        hosts_df = pd.DataFrame(columns=['ip', 'node_num'])
 
         # Download log files.
         progress = progress_bar(hosts, prefix='Downloading logs:')
@@ -240,10 +243,14 @@ class Bench:
             c.get(
                 PathMaker.client_log_file(i), local=PathMaker.client_log_file(i)
             )
-
+            # mapping HOST <---> i 
+            new_data = pd.DataFrame({'ip':host, 'node_num':i},  index=[0])
+            hosts_df = pd.concat([hosts_df, new_data], ignore_index = True)
+        
+        servers = pd.merge(servers, hosts_df, on='ip')
         # Parse logs and return the parser.
         Print.info('Parsing logs and computing performance...')
-        return LogParser.process(PathMaker.logs_path(), faults=faults)
+        return LogParser.process(PathMaker.logs_path(), faults=faults, servers=servers)
 
     def run(self, bench_parameters_dict, node_parameters_dict, debug=False):
         assert isinstance(debug, bool)
@@ -306,7 +313,7 @@ class Bench:
                         self._run_single(
                             hosts, r, bench_parameters, node_parameters, debug
                         )
-                        self._logs(hosts, faults).print(PathMaker.result_file(
+                        self._logs(hosts, faults, servers).print(PathMaker.result_file(
                             faults, n, r, bench_parameters.tx_size
                         ))
                     except (subprocess.SubprocessError, GroupException, ParseError) as e:

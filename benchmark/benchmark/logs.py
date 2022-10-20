@@ -4,6 +4,7 @@ from multiprocessing import Pool
 from os.path import join
 from re import findall, search
 from statistics import mean
+import pandas as pd
 
 from benchmark.utils import Print
 from benchmark.geo_logs import GeoLogParser
@@ -231,7 +232,7 @@ class LogParser:
             f.write(self.result())
 
     @classmethod
-    def process(cls, directory, faults):
+    def process(cls, directory, faults, servers):
         assert isinstance(directory, str)
 
         clients = []
@@ -244,6 +245,7 @@ class LogParser:
                 nodes += [f.read()]
 
         data = GeoLogParser.count_votes_props()
-        print(data)
+        results = pd.merge(servers, data, on='node_num')
+        print(results)
         
         return cls(clients, nodes, faults)
