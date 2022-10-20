@@ -32,7 +32,7 @@ class GeoDec:
                 updated = pd.concat([updated, data], ignore_index = True)
                 num = num - 1
         # adding IP address to servers
-        updated = self._addIPtoServers(updated)
+        updated = self._addIPtoServers(updated, ip_file="/home/ubuntu/IP.txt")
         # calculate geospatial diversity index
         valGDI = self._calculateGDI(updated)
         return pd.merge(updated, valGDI, on='name')
