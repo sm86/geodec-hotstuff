@@ -1,3 +1,4 @@
+from csv import writer
 from datetime import datetime
 from glob import glob
 from multiprocessing import Pool
@@ -5,6 +6,7 @@ from os.path import join
 from re import findall, search
 from statistics import mean
 import pandas as pd
+
 
 from benchmark.utils import Print
 from benchmark.geo_logs import GeoLogParser
@@ -195,6 +197,19 @@ class LogParser:
         mempool_batch_size = self.configs[0]['mempool']['batch_size']
         mempool_max_batch_delay = self.configs[0]['mempool']['max_batch_delay']
 
+        # cols = ['committee_size', 'faults', 'rate', 'tx_size', 'mempool_size', 'tps', 'bps', 'latency']
+
+        data = [self.committee_size, self.faults, sum(self.rate), self.size[0], mempool_batch_size, round(consensus_tps), round(consensus_bps), round(consensus_latency)]        
+        
+        with open('/home/ubuntu/results/hs-nodelay-base-results.csv', 'a', newline='') as f_object:  
+            # Pass the CSV  file object to the writer() function
+            writer_object = writer(f_object)
+            # Result - a writer object
+            # Pass the data in the list as an argument into the writerow() function
+            writer_object.writerow(data)  
+            # Close the file object
+            f_object.close()
+            
         return (
             '\n'
             '-----------------------------------------\n'

@@ -262,7 +262,7 @@ class Bench:
             raise BenchError('Invalid nodes or bench parameters', e)
 
         # test GeoInput  
-        geoInput = {1: 1, 3: 1, 4: 1, 10: 1}    
+        geoInput = {1: 64}    
         geodec = GeoDec()
         servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
         pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
@@ -280,13 +280,13 @@ class Bench:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
         
-        # Set delay parameters.
-        try:
-            self._configDelay(selected_hosts)
-            self._addDelays(servers, pingDelays, self.settings.interface)
-        except (subprocess.SubprocessError, GroupException) as e:
-            e = FabricError(e) if isinstance(e, GroupException) else e
-            Print.error(BenchError('Failed to initalize delays', e))
+        # # Set delay parameters.
+        # try:
+        #     self._configDelay(selected_hosts)
+        #     self._addDelays(servers, pingDelays, self.settings.interface)
+        # except (subprocess.SubprocessError, GroupException) as e:
+        #     e = FabricError(e) if isinstance(e, GroupException) else e
+        #     Print.error(BenchError('Failed to initalize delays', e))
          
         # Run benchmarks.
         for n in bench_parameters.nodes:
@@ -324,11 +324,11 @@ class Bench:
                         continue
         
         # Delte delay parameters.
-        try:
-            self._deleteDelay(selected_hosts)
-        except (subprocess.SubprocessError, GroupException) as e:
-            e = FabricError(e) if isinstance(e, GroupException) else e
-            Print.error(BenchError('Failed to initalize delays', e))
+        # try:
+        #     self._deleteDelay(selected_hosts)
+        # except (subprocess.SubprocessError, GroupException) as e:
+        #     e = FabricError(e) if isinstance(e, GroupException) else e
+        #     Print.error(BenchError('Failed to initalize delays', e))
             
     ################ GEODEC Emulator methods #########################
     def _configDelay(self, hosts):
