@@ -94,19 +94,22 @@ def install(ctx):
 
 @task
 def remote(ctx):
-    ''' Run benchmarks on AWS '''
+    ''' Run benchmarks on ComputeCanada/AWS '''
+    # test GeoInput  
+    geoInput = {1: 64}    
+    
     bench_params = {
         'faults': 0,
-        'nodes': [4],
+        'nodes': [64],
         'rate': [10_000],
-        'tx_size': 512,
+        'tx_size': 32,
         'duration': 60,
         'runs': 1,
     }
     node_params = {
         'consensus': {
-            'timeout_delay': 5_000,
-            'sync_retry_delay': 5_000,
+            'timeout_delay': 50_000,
+            'sync_retry_delay': 50_000,
         },
         'mempool': {
             'gc_depth': 50,
@@ -116,8 +119,10 @@ def remote(ctx):
             'max_batch_delay': 100
         }
     }
+  
+    
     try:
-        Bench(ctx).run(bench_params, node_params, debug=False)
+        Bench(ctx).run(bench_params, node_params, geoInput, debug=False)
     except BenchError as e:
         Print.error(e)
 

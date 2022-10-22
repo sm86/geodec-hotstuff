@@ -252,7 +252,7 @@ class Bench:
         Print.info('Parsing logs and computing performance...')
         return LogParser.process(PathMaker.logs_path(), faults=faults, servers=servers)
 
-    def run(self, bench_parameters_dict, node_parameters_dict, debug=False):
+    def run(self, bench_parameters_dict, node_parameters_dict, geoInput, debug=False):
         assert isinstance(debug, bool)
         Print.heading('Starting remote benchmark')
         try:
@@ -261,8 +261,6 @@ class Bench:
         except ConfigError as e:
             raise BenchError('Invalid nodes or bench parameters', e)
 
-        # test GeoInput  
-        geoInput = {1: 64}    
         geodec = GeoDec()
         servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
         pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
