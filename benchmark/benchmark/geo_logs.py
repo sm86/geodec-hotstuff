@@ -56,7 +56,7 @@ class GeoLogParser:
     
     @staticmethod
     def get_new_run_id():
-        data = pd.read_csv('/home/ubuntu/results/geo-dec-metrics.csv')
-        id = data[data['node_num'] == 0].value_counts()
-        print(id)
-        return id
+        # data = pd.read_csv('/home/ubuntu/results/geo-dec-metrics.csv')
+        # id = data[data['node_num'] == 0].value_counts()
+        # print(id)
+        return 1
