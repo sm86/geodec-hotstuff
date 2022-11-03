@@ -17,7 +17,7 @@ class ParseError(Exception):
 
 
 class LogParser:
-    def __init__(self, clients, nodes, faults):
+    def __init__(self, clients, nodes, faults, run_id):
         inputs = [clients, nodes]
         assert all(isinstance(x, list) for x in inputs)
         assert all(isinstance(x, str) for y in inputs for x in y)
@@ -29,6 +29,8 @@ class LogParser:
         else:
             self.committee_size = '?'
 
+        self.run_id = run_id
+        
         # Parse the clients logs.
         try:
             with Pool() as p:
@@ -199,9 +201,9 @@ class LogParser:
 
         # cols = ['committee_size', 'faults', 'rate', 'tx_size', 'mempool_size', 'tps', 'bps', 'latency']
 
-        data = [self.committee_size, self.faults, sum(self.rate), self.size[0], mempool_batch_size, round(consensus_tps), round(consensus_bps), round(consensus_latency)]        
+        data = [self.committee_size, self.faults, sum(self.rate), self.size[0], mempool_batch_size, round(consensus_tps), round(consensus_bps), round(consensus_latency), self.run_id]        
         
-        with open('/home/ubuntu/results/hs-nodelay-base-results.csv', 'a', newline='') as f_object:  
+        with open('/home/ubuntu/results/hs-delay-results.csv', 'a', newline='') as f_object:  
             # Pass the CSV  file object to the writer() function
             writer_object = writer(f_object)
             # Result - a writer object
@@ -261,6 +263,9 @@ class LogParser:
 
         data = GeoLogParser.count_votes_props()
         results = pd.merge(servers, data, on='node_num')
-        print(results)
         
-        return cls(clients, nodes, faults)
+        run_id = GeoLogParser.get_new_run_id()
+        
+        print(results)
+        results.to_csv('/home/ubuntu/results/geo-dec-metrics.csv', mode='a', index=False, header=False)
+        return cls(clients, nodes, faults, run_id)
