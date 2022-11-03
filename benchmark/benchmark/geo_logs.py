@@ -44,4 +44,10 @@ class GeoLogParser:
             'proposals': proposals,
             'node_num' : node_num
             })
-        return votes_data
+        return GeoLogParser._calculate_liveliness(votes_data)
+    
+    @staticmethod
+    def _calculate_liveliness(data):
+        total_props  = data['proposals'].sum()
+        data['liveliness'] = ((data['votes']+ data['proposals'])/total_props) * 100
+        return data

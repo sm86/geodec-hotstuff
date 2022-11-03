@@ -30,21 +30,23 @@ class LogParser:
             self.committee_size = '?'
 
         # Parse the clients logs.
-        try:
-            with Pool() as p:
-                results = p.map(self._parse_clients, clients)
-        except (ValueError, IndexError) as e:
-            raise ParseError(f'Failed to parse client logs: {e}')
+        # try:
+        #     with Pool() as p:
+        #         results = p.map(self._parse_clients, clients)
+        # except (ValueError, IndexError) as e:
+        #     raise ParseError(f'Failed to parse client logs: {e}')
+        results = map(self._parse_clients, clients)
         self.size, self.rate, self.start, misses, self.sent_samples \
             = zip(*results)
         self.misses = sum(misses)
 
-        # Parse the nodes logs.
-        try:
-            with Pool() as p:
-                results = p.map(self._parse_nodes, nodes)
-        except (ValueError, IndexError) as e:
-            raise ParseError(f'Failed to parse node logs: {e}')
+        # # Parse the nodes logs.
+        # try:
+        #     with Pool() as p:
+        #         results = p.map(self._parse_nodes, nodes)
+        # except (ValueError, IndexError) as e:
+        #     raise ParseError(f'Failed to parse node logs: {e}')
+        results = map(self._parse_nodes, nodes)
         proposals, commits, sizes, self.received_samples, timeouts, self.configs \
             = zip(*results)
         self.proposals = self._merge_results([x.items() for x in proposals])

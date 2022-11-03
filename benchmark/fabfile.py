@@ -96,14 +96,14 @@ def install(ctx):
 def remote(ctx):
     ''' Run benchmarks on ComputeCanada/AWS '''
     # test GeoInput  
-    geoInput = {1: 64}    
+    geoInput = {1: 16}    
     
     bench_params = {
         'faults': 0,
-        'nodes': [64],
-        'rate': [10_000],
-        'tx_size': 32,
-        'duration': 60,
+        'nodes': [16],
+        'rate': [20000],
+        'tx_size': 512,
+        'duration': 120,
         'runs': 1,
     }
     node_params = {
@@ -115,7 +115,7 @@ def remote(ctx):
             'gc_depth': 50,
             'sync_retry_delay': 5_000,
             'sync_retry_nodes': 3,
-            'batch_size': 500_000,
+            'batch_size': 204800,
             'max_batch_delay': 100
         }
     }
@@ -133,7 +133,7 @@ def plot(ctx):
     plot_params = {
         'faults': [0],
         'nodes': [10, 20, 50],
-        'tx_size': 512,
+        'tx_size': 32,
         'max_latency': [2_000, 5_000]
     }
     try:
