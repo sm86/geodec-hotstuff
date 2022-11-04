@@ -352,7 +352,7 @@ class Bench:
                     delay_data = pingDelays.query(query) 
                     delay = delay_data['avg'].values.astype(float)[0]
                     delay_dev = delay_data['mdev'].values.astype(float)[0]
-                    cmd = self._getDelayCommand(counter, destination['ip'], interface, delay/2, delay_dev/2)
+                    cmd = self._getDelayCommand(counter+1, destination['ip'], interface, delay/2, delay_dev/2)
                     source_commands = source_commands + cmd
                     counter = counter + 1
             host = source['ip']
