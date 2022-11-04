@@ -52,11 +52,13 @@ class GeoLogParser:
         total_props  = data['proposals'].sum()
         data['liveliness'] = ((data['votes']+ data['proposals'])/total_props) * 100
         data['liveliness_woprops'] = ((data['votes'])/total_props) * 100
+        print(total_props)
         return data
     
     @staticmethod
     def get_new_run_id():
         data = pd.read_csv('/home/ubuntu/results/geo-dec-metrics.csv')
-        id = data[data['node_num'] == 0].value_counts()
-        print(id)
-        return id
+        # id = data[data['node_num'] == 0].value_counts()
+        # print(id)
+        # return id
+        return 10000
