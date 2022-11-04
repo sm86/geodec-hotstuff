@@ -14,7 +14,7 @@ from benchmark.utils import PathMaker
 #########################################################################################
 class GeoLogParser:
     @staticmethod
-    def count_votes_props():
+    def count_votes_props(run_id):
         directory = PathMaker.logs_path()
         addresses = []
         proposals = []
@@ -43,7 +43,7 @@ class GeoLogParser:
             'votes': votes,
             'proposals': proposals,
             'node_num' : node_num,
-            'run_id' : ([GeoLogParser.get_new_run_id()] * len(addresses))
+            'run_id' : ([run_id] * len(addresses))
             })
         return GeoLogParser._calculate_liveliness(votes_data)
     
@@ -58,7 +58,4 @@ class GeoLogParser:
     @staticmethod
     def get_new_run_id():
         data = pd.read_csv('/home/ubuntu/results/geo-dec-metrics.csv')
-        # id = data[data['node_num'] == 0].value_counts()
-        # print(id)
-        # return id
-        return 10000
+        return (data['run_id'].max() + 1)
