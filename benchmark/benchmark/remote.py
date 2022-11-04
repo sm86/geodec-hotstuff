@@ -279,12 +279,12 @@ class Bench:
             raise BenchError('Failed to update nodes', e)
         
         # # Set delay parameters.
-        # try:
-        #     self._configDelay(selected_hosts)
-        #     self._addDelays(servers, pingDelays, self.settings.interface)
-        # except (subprocess.SubprocessError, GroupException) as e:
-        #     e = FabricError(e) if isinstance(e, GroupException) else e
-        #     Print.error(BenchError('Failed to initalize delays', e))
+        try:
+            self._configDelay(selected_hosts)
+            self._addDelays(servers, pingDelays, self.settings.interface)
+        except (subprocess.SubprocessError, GroupException) as e:
+            e = FabricError(e) if isinstance(e, GroupException) else e
+            Print.error(BenchError('Failed to initalize delays', e))
          
         # Run benchmarks.
         for n in bench_parameters.nodes:
@@ -322,11 +322,11 @@ class Bench:
                         continue
         
         # Delte delay parameters.
-        # try:
-        #     self._deleteDelay(selected_hosts)
-        # except (subprocess.SubprocessError, GroupException) as e:
-        #     e = FabricError(e) if isinstance(e, GroupException) else e
-        #     Print.error(BenchError('Failed to initalize delays', e))
+        try:
+            self._deleteDelay(selected_hosts)
+        except (subprocess.SubprocessError, GroupException) as e:
+            e = FabricError(e) if isinstance(e, GroupException) else e
+            Print.error(BenchError('Failed to initalize delays', e))
             
     ################ GEODEC Emulator methods #########################
     def _configDelay(self, hosts):
