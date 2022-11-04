@@ -352,7 +352,7 @@ class Bench:
                     delay_data = pingDelays.query(query) 
                     delay = delay_data['avg'].values.astype(float)[0]
                     delay_dev = delay_data['mdev'].values.astype(float)[0]
-                    cmd = self._getDelayCommand(counter+1, destination['ip'], interface, delay/2, delay_dev/2)
+                    cmd = self._getDelayCommand(counter, destination['ip'], interface, delay/2, delay_dev/2)
                     source_commands = source_commands + cmd
                     counter = counter + 1
             host = source['ip']
@@ -362,4 +362,4 @@ class Bench:
             c.run(source_commands, hide=True)
 
     def _getDelayCommand(self, n, ip, interface, delay, delay_dev):
-        return (f'sudo tc class add dev {interface} parent 1:0 classid 1:{n+1} htb rate 1000kbit; sudo tc filter add dev {interface} parent 1:0 protocol ip u32 match ip dst {ip} flowid 1:{n}; sudo tc qdisc add dev {interface} parent 1:{n} handle {n*10}:0 netem delay {delay}ms {delay_dev}ms; ')
+        return (f'sudo tc class add dev {interface} parent 1:0 classid 1:{n+1} htb rate 1000kbit; sudo tc filter add dev {interface} parent 1:0 protocol ip u32 match ip dst {ip} flowid 1:{n}; sudo tc qdisc add dev {interface} parent 1:{n+1} handle {n*10}:0 netem delay {delay}ms {delay_dev}ms; ')
