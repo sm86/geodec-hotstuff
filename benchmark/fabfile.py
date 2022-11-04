@@ -96,11 +96,11 @@ def install(ctx):
 def remote(ctx):
     ''' Run benchmarks on ComputeCanada/AWS '''
     # test GeoInput  
-    geoInput = {1: 16}    
+    geoInput = {1: 63, 2: 1}    
     
     bench_params = {
         'faults': 0,
-        'nodes': [16],
+        'nodes': [64],
         'rate': [20000],
         'tx_size': 512,
         'duration': 120,
