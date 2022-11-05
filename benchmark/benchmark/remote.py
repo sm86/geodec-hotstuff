@@ -287,47 +287,47 @@ class Bench:
             e = FabricError(e) if isinstance(e, GroupException) else e
             Print.error(BenchError('Failed to initalize delays', e))
          
-        # # Run benchmarks.
-        # for n in bench_parameters.nodes:
-        #     for r in bench_parameters.rate:
-        #         Print.heading(f'\nRunning {n} nodes (input rate: {r:,} tx/s)')
-        #         hosts = selected_hosts[:n]
+        # Run benchmarks.
+        for n in bench_parameters.nodes:
+            for r in bench_parameters.rate:
+                Print.heading(f'\nRunning {n} nodes (input rate: {r:,} tx/s)')
+                hosts = selected_hosts[:n]
 
-        #         # Upload all configuration files.
-        #         try:
-        #             self._config(hosts, node_parameters)
-        #         except (subprocess.SubprocessError, GroupException) as e:
-        #             e = FabricError(e) if isinstance(e, GroupException) else e
-        #             Print.error(BenchError('Failed to configure nodes', e))
-        #             continue
+                # Upload all configuration files.
+                try:
+                    self._config(hosts, node_parameters)
+                except (subprocess.SubprocessError, GroupException) as e:
+                    e = FabricError(e) if isinstance(e, GroupException) else e
+                    Print.error(BenchError('Failed to configure nodes', e))
+                    continue
 
-        #         # Do not boot faulty nodes.
-        #         faults = bench_parameters.faults
-        #         hosts = hosts[:n-faults]
+                # Do not boot faulty nodes.
+                faults = bench_parameters.faults
+                hosts = hosts[:n-faults]
 
-        #         # Run the benchmark.
-        #         for i in range(bench_parameters.runs):
-        #             Print.heading(f'Run {i+1}/{bench_parameters.runs}')
-        #             try:
-        #                 self._run_single(
-        #                     hosts, r, bench_parameters, node_parameters, debug
-        #                 )
-        #                 self._logs(hosts, faults, servers) #.print(PathMaker.result_file(
-        #                     # faults, n, r, bench_parameters.tx_size
-        #                 # ))
-        #             except (subprocess.SubprocessError, GroupException, ParseError) as e:
-        #                 self.kill(hosts=hosts)
-        #                 if isinstance(e, GroupException):
-        #                     e = FabricError(e)
-        #                 Print.error(BenchError('Benchmark failed', e))
-        #                 continue
+                # Run the benchmark.
+                for i in range(bench_parameters.runs):
+                    Print.heading(f'Run {i+1}/{bench_parameters.runs}')
+                    try:
+                        self._run_single(
+                            hosts, r, bench_parameters, node_parameters, debug
+                        )
+                        self._logs(hosts, faults, servers) #.print(PathMaker.result_file(
+                            # faults, n, r, bench_parameters.tx_size
+                        # ))
+                    except (subprocess.SubprocessError, GroupException, ParseError) as e:
+                        self.kill(hosts=hosts)
+                        if isinstance(e, GroupException):
+                            e = FabricError(e)
+                        Print.error(BenchError('Benchmark failed', e))
+                        continue
         
-        # # Delte delay parameters.
-        # try:
-        #     self._deleteDelay(selected_hosts)
-        # except (subprocess.SubprocessError, GroupException) as e:
-        #     e = FabricError(e) if isinstance(e, GroupException) else e
-        #     Print.error(BenchError('Failed to initalize delays', e))
+        # Delte delay parameters.
+        try:
+            self._deleteDelay(selected_hosts)
+        except (subprocess.SubprocessError, GroupException) as e:
+            e = FabricError(e) if isinstance(e, GroupException) else e
+            Print.error(BenchError('Failed to initalize delays', e))
             
     ################ GEODEC Emulator methods #########################
     def _configDelay(self, hosts):
