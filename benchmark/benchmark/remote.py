@@ -255,6 +255,7 @@ class Bench:
     def run(self, bench_parameters_dict, node_parameters_dict, geoInput, debug=False):
         assert isinstance(debug, bool)
         Print.heading('Starting remote benchmark')
+        print("here to debug ", geoInput)
         try:
             bench_parameters = BenchParameters(bench_parameters_dict)
             node_parameters = NodeParameters(node_parameters_dict)
