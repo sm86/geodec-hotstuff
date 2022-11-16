@@ -249,7 +249,7 @@ class LogParser:
             f.write(self.result())
 
     @classmethod
-    def process(cls, directory, faults, servers):
+    def process(cls, directory, faults, servers, run_id):
         assert isinstance(directory, str)
 
         clients = []
@@ -261,11 +261,9 @@ class LogParser:
             with open(filename, 'r') as f:
                 nodes += [f.read()]
 
-        run_id = GeoLogParser.get_new_run_id()
-
         data = GeoLogParser.count_votes_props(run_id)
         results = pd.merge(servers, data, on='node_num')
         
         print(results)
         results.to_csv('/home/ubuntu/results/geo-dec-metrics.csv', mode='a', index=False, header=False)
-        # return cls(clients, nodes, faults, run_id)
+        return cls(clients, nodes, faults, run_id)

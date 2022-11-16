@@ -15,6 +15,7 @@ from benchmark.commands import CommandMaker
 from benchmark.logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
 from benchmark.geodec import GeoDec
+from benchmark.geo_logs import GeoLogParser
 
 
 class FabricError(Exception):
@@ -228,7 +229,7 @@ class Bench:
             sleep(ceil(duration / 20))
         self.kill(hosts=hosts, delete_logs=False)
 
-    def _logs(self, hosts, faults, servers):
+    def _logs(self, hosts, faults, servers, run_id):
         # Delete local logs (if any).
         cmd = CommandMaker.clean_logs()
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
@@ -250,12 +251,11 @@ class Bench:
         servers = pd.merge(servers, hosts_df, on='ip')
         # Parse logs and return the parser.
         Print.info('Parsing logs and computing performance...')
-        return LogParser.process(PathMaker.logs_path(), faults=faults, servers=servers)
+        return LogParser.process(PathMaker.logs_path(), faults=faults, servers=servers, run_id =run_id)
 
     def run(self, bench_parameters_dict, node_parameters_dict, geoInput, debug=False):
         assert isinstance(debug, bool)
         Print.heading('Starting remote benchmark')
-        print("here to debug ", geoInput)
         try:
             bench_parameters = BenchParameters(bench_parameters_dict)
             node_parameters = NodeParameters(node_parameters_dict)
@@ -305,24 +305,32 @@ class Bench:
                 # Do not boot faulty nodes.
                 faults = bench_parameters.faults
                 hosts = hosts[:n-faults]
-
+                
+                run_id_array = []
+                
                 # Run the benchmark.
                 for i in range(bench_parameters.runs):
-                    Print.heading(f'Run {i+1}/{bench_parameters.runs}')
+                    run_id = GeoLogParser.get_new_run_id()
+                    Print.heading(f'Run {i+1}/{bench_parameters.runs} with run_id {run_id}')
                     try:
                         self._run_single(
                             hosts, r, bench_parameters, node_parameters, debug
                         )
-                        self._logs(hosts, faults, servers) #.print(PathMaker.result_file(
-                            # faults, n, r, bench_parameters.tx_size
-                        # ))
+                        self._logs(hosts, faults, servers, run_id).print(PathMaker.result_file(
+                            faults, n, r, bench_parameters.tx_size
+                        ))
+                        run_id_array.append(run_id)
                     except (subprocess.SubprocessError, GroupException, ParseError) as e:
                         self.kill(hosts=hosts)
                         if isinstance(e, GroupException):
                             e = FabricError(e)
                         Print.error(BenchError('Benchmark failed', e))
                         continue
-        
+                
+                aggregated_results = GeoLogParser.aggregate_runs(run_id_array)
+                print(aggregated_results)
+                aggregated_results.to_csv('/home/ubuntu/results/mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
+
         # Delte delay parameters.
         try:
             self._deleteDelay(selected_hosts)
@@ -357,7 +365,6 @@ class Bench:
                     source_commands = source_commands + cmd
                     counter = counter + 1
             host = source['ip']
-            print(host, source_commands)
             # execute the command for source IP
             c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
             c.run(source_commands, hide=True)

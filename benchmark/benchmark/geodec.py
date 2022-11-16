@@ -22,13 +22,11 @@ class GeoDec:
     
     # get all servers based on count and location 
     def getAllServers(self, geoInput, servers_file, ip_file):
-        print("here to debug getAllServers ", geoInput)
 
         servers = self._getServers(geoInput, servers_file)
         updated = servers
         for key in geoInput:
             num = geoInput[key]
-            print("here to debug getAllServers key and number are ", key, num)
             while num > 1 :
                 data = servers.query(f'id == {key}').copy()
                 data['name'] = data['name']+str(num)
