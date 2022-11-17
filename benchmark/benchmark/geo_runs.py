@@ -42,7 +42,6 @@ def change_location_input(config, geo_input):
                 flag = True
             if flag:
                 if lines[i].startswith("    geoInput"):
-                    print(lines[i])
                     lines[i] = f"    geoInput = {geo_input}\n"
     
     with open(config, 'w') as f:
@@ -62,24 +61,57 @@ def get_random_input(locations):
             geo_input[random_loc] = 1
     return geo_input
 
+def get_custom_input(majority, minority, majority_count):
+    geo_input = {}
+    geo_input[majority] = majority_count
+    minority_size = COMMITTEE_SIZE - majority_count
+    if(minority_size > 0):
+        geo_input[minority] = minority_size
+    return geo_input
+
 if __name__ == "__main__":
-    
+
+
     locations = get_server_locations(SERVERS_FILE)
-    i = 300
-    while(i>0):
-        i = i -1
-        geo_input = get_random_input(locations)
-        change_location_input("fabfile.py", geo_input)
+    #################################
+    ##### RANDOM INPUT RUNS #########
+    #################################
+    # i = 300
+    # while(i>0):
+    #     i = i -1
+    #     # Get random inputs from the runs
+    #     geo_input = get_random_input(locations)
+    #     change_location_input("fabfile.py", geo_input)
         
-        now = datetime.datetime.now()
-        print("==============================================================")
-        print(str(now) + " Running "+ str(i) +" test with " + str(geo_input))
+    #     now = datetime.datetime.now()
+    #     print("==============================================================")
+    #     print(str(now) + " Running "+ str(i) +" test with " + str(geo_input))
 
-        subprocess.run(["fab", "remote"])
+    #     subprocess.run(["fab", "remote"])
 
-        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        sleep(1)
-        
+    #     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    #     sleep(1)
+    
+    # Show the minority rise with change
+    minority_nodes = [222, 52, 53, 4, 210, 72, 6]
+    majority_nodes = [2, 23]
+    for majority in majority_nodes:
+        for minority in minority_nodes:
+            i = COMMITTEE_SIZE
+            while(i>(COMMITTEE_SIZE/2)):
+                geo_input = get_custom_input(majority, minority, i)
+                change_location_input("fabfile.py", geo_input)
+                
+                now = datetime.datetime.now()
+                print("==============================================================")
+                print(str(now) + " Running "+ str(i) +" test with " + str(geo_input))
+
+                # subprocess.run(["fab", "remote"])
+
+                print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                sleep(1)
+                i = i -1
+
     # message_sizes = [ 16, 32]
     # batch_sizes = [200, 500, 1000, 10000, 20000, 50000, 80000, 100000]
     # tgt_tp = [20000 , 30000, 50000, 100000, 200000, 450000]
