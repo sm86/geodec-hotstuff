@@ -316,9 +316,9 @@ class Bench:
                         self._run_single(
                             hosts, r, bench_parameters, node_parameters, debug
                         )
-                        self._logs(hosts, faults, servers, run_id).print(PathMaker.result_file(
-                            faults, n, r, bench_parameters.tx_size
-                        ))
+                        self._logs(hosts, faults, servers, run_id) #.print(PathMaker.result_file(
+                            # faults, n, r, bench_parameters.tx_size
+                        # ))
                         run_id_array.append(run_id)
                     except (subprocess.SubprocessError, GroupException, ParseError) as e:
                         self.kill(hosts=hosts)
@@ -329,7 +329,7 @@ class Bench:
                 
                 aggregated_results = GeoLogParser.aggregate_runs(run_id_array)
                 print(aggregated_results)
-                aggregated_results.to_csv('/home/ubuntu/results/minority-mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
+                aggregated_results.to_csv('/home/ubuntu/results/64node-mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
 
         # Delte delay parameters.
         try:

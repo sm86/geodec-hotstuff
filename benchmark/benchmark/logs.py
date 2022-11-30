@@ -266,4 +266,4 @@ class LogParser:
         
         print(results)
         results.to_csv('/home/ubuntu/results/geo-dec-metrics.csv', mode='a', index=False, header=False)
-        return cls(clients, nodes, faults, run_id)
+        # return cls(clients, nodes, faults, run_id)

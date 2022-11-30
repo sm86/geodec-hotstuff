@@ -115,3 +115,30 @@ class GeoDec:
         id = list(geoInput.keys())
         pingsDelays = pingsDelays[pingsDelays.source.isin(id) & pingsDelays.destination.isin(id)].query('source != destination')
         return pingsDelays
+   
+    def _check_if_quorum(self, dist_matrix, server, target, quorum_threshold):
+        # get the distance from server to target
+        distance = dist_matrix[target][server]
+        # get sorted list 
+        quorum_distances = sorted(dist_matrix[target])[:quorum_threshold]
+        return (distance in quorum_distances)
+  
+  ### GDI (GeoSpatial Diversity Index) CALCULATION
+  ### UTILITIES 
+    def calculateGDI_updated(self, data): 
+        dist_matrix = self._getDistanceMatrix(data)
+        
+        servers = list(dist_matrix.columns)
+        
+        two_third_threshold = math.ceil(len(servers) * (2/3))
+        
+        GDI_df = pd.DataFrame(columns=['name', 'quorum_counter'])
+        for addr in servers:
+            quorum_counter = 0
+            for target in servers:
+                if self._check_if_quorum(dist_matrix, addr, target, two_third_threshold):
+                    quorum_counter = quorum_counter + 1 
+            new_data = pd.DataFrame({'name':addr, 'quorum_counter':quorum_counter},  index=[0])
+            GDI_df = pd.concat([GDI_df, new_data], ignore_index = True)
+        GDI_df = GDI_df.merge(data,  on='name',  how='right')
+        return GDI_df
