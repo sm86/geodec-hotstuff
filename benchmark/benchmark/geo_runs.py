@@ -12,7 +12,7 @@ import math
 from time import sleep
 
 SERVERS_FILE  = '/home/ubuntu/data/servers-2020-07-19.csv'
-MARKED_SERVERS_FILE = '/home/ubuntu/data/servers-2020-07-19-us-europe-filter.csv'
+MARKED_SERVERS_FILE = '/home/ubuntu/data/servers-2020-07-19-us-europe-filter-2.csv'
 COMMITTEE_SIZE = 64 #16
 
 def change_config(config, rate, batch_size, message_size):
