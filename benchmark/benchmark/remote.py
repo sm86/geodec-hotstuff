@@ -358,7 +358,9 @@ class Bench:
             for index, destination in servers.iterrows():
                 if source['id'] != destination['id']:
                     query = 'source == ' + str(source['id']) + ' and destination == '+ str(destination['id'])
+                    print(query)
                     delay_data = pingDelays.query(query) 
+                    print(delay_data)
                     delay = delay_data['avg'].values.astype(float)[0]
                     delay_dev = delay_data['mdev'].values.astype(float)[0]
                     cmd = self._getDelayCommand(counter, destination['ip'], interface, delay/2, delay_dev/2)
