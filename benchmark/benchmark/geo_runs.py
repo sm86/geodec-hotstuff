@@ -102,10 +102,10 @@ def get_us_europe_rest_distribution(minority_size):
     while x > 0:
         random_loc = random.choice(minority_ids)
         if random_loc in geo_input.keys():
-            geo_input[random_loc] = 4 + geo_input[random_loc]
+            geo_input[random_loc] = 2 + geo_input[random_loc]
         else:
-            geo_input[random_loc] = 4
-        x = x - 4
+            geo_input[random_loc] = 2
+        x = x - 2
     
     # fill in the remaining seats with majority, each location has six
     majority_size = COMMITTEE_SIZE - minority_size
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     ##################################################################
     geodec = GeoDec()
     
-    runs  = 1
+    runs  = 2
     
     while runs > 0:
         runs = runs - 1
@@ -222,7 +222,7 @@ if __name__ == "__main__":
             geo_input = get_us_europe_rest_distribution(minority_count)
             pingDelays = geodec.getPingDelay(geo_input, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")    
             
-            # change_location_input("fabfile.py", geo_input)
+            change_location_input("fabfile.py", geo_input)
             if(check_if_valid_input(geo_input, pingDelays)):
                 now = datetime.datetime.now()
                 print("==============================================================")
