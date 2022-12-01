@@ -10,6 +10,7 @@ import sys
 import math
 
 from time import sleep
+from geodec import GeoDec
 
 SERVERS_FILE  = '/home/ubuntu/data/servers-2020-07-19.csv'
 MARKED_SERVERS_FILE = '/home/ubuntu/data/servers-2020-07-19-us-europe-filter-2.csv'
@@ -101,17 +102,17 @@ def get_us_europe_rest_distribution(minority_size):
     while x > 0:
         random_loc = random.choice(minority_ids)
         if random_loc in geo_input.keys():
-            geo_input[random_loc] = 2 + geo_input[random_loc]
+            geo_input[random_loc] = 4 + geo_input[random_loc]
         else:
-            geo_input[random_loc] = 2
-        x = x - 2
+            geo_input[random_loc] = 4
+        x = x - 4
     
     # fill in the remaining seats with majority, each location has six
     majority_size = COMMITTEE_SIZE - minority_size
     while majority_size > 0:
         number = majority_size
-        if majority_size > 6 :
-            number = 6
+        if majority_size > 8 :
+            number = 8
             majority_size = majority_size - number
         else: 
             majority_size = 0
@@ -123,6 +124,19 @@ def get_us_europe_rest_distribution(minority_size):
             geo_input[random_loc] = number
     
     return geo_input
+
+## this function checks if we have all the pairs of data for exsiting inputs
+def check_if_valid_input(geo_input, pingDelays):
+    keys = list(geo_input.keys())
+    
+    for source in keys:
+        for destination in keys:
+            if source != destination:
+                query = 'source == ' + str(source) + ' and destination == '+ str(destination)
+                delay_data = pingDelays.query(query) 
+                if(delay_data is None):
+                    return False            
+    return True
 
 if __name__ == "__main__":
 
@@ -194,7 +208,10 @@ if __name__ == "__main__":
     ### 64 nodes. Majority in US/Europe. Keep varying the minority####
     ### We pick all nodes from these locations randomly ##############
     ##################################################################
-    runs  = 2
+    geodec = GeoDec()
+    
+    runs  = 1
+    
     while runs > 0:
         runs = runs - 1
         
@@ -203,19 +220,20 @@ if __name__ == "__main__":
         while minority_count > 0:
             
             geo_input = get_us_europe_rest_distribution(minority_count)
+            pingDelays = geodec.getPingDelay(geo_input, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")    
             
-            change_location_input("fabfile.py", geo_input)
+            # change_location_input("fabfile.py", geo_input)
+            if(check_if_valid_input(geo_input, pingDelays)):
+                now = datetime.datetime.now()
+                print("==============================================================")
+                print(str(now) + " Running "+ str(runs) +" test with " + str(geo_input) + " minority count is "+ str(minority_count))
 
-            now = datetime.datetime.now()
-            print("==============================================================")
-            print(str(now) + " Running "+ str(runs) +" test with " + str(geo_input) + " minority count is "+ str(minority_count))
+                subprocess.run(["fab", "remote"])
 
-            subprocess.run(["fab", "remote"])
-
-            print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-            sleep(1)
+                print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                sleep(1)
  
-            minority_count = minority_count - 2
+                minority_count = minority_count - 4
     
     #######################################################    
     #### BASIC RUNS #######################################
