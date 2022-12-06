@@ -134,7 +134,7 @@ def check_if_valid_input(geo_input, pingDelays):
             if source != destination:
                 query = 'source == ' + str(source) + ' and destination == '+ str(destination)
                 delay_data = pingDelays.query(query) 
-                if(delay_data is None):
+                if(delay_data.empty):
                     return False            
     return True
 
@@ -342,7 +342,7 @@ if __name__ == "__main__":
             geo_input = get_fixed_64node(minority_count)
             pingDelays = geodec.getPingDelay(geo_input, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")    
 
-            # change_location_input("fabfile.py", geo_input)
+            change_location_input("fabfile.py", geo_input)
             if(check_if_valid_input(geo_input, pingDelays)):
                 now = datetime.datetime.now()
                 print("==============================================================")
@@ -355,7 +355,7 @@ if __name__ == "__main__":
  
                 minority_count = minority_count - 4
             else:
-                print("ehat to do ey")
+                print("eh what to do ey")
     #######################################################    
     #### BASIC RUNS #######################################
     #######################################################    
