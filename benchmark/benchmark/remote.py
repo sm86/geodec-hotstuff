@@ -329,7 +329,7 @@ class Bench:
                 
                 aggregated_results = GeoLogParser.aggregate_runs(run_id_array)
                 print(aggregated_results)
-                aggregated_results.to_csv('/home/ubuntu/results/64node-check-mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
+                aggregated_results.to_csv('/home/ubuntu/results/64node-fixed-mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
 
         # Delte delay parameters.
         try:

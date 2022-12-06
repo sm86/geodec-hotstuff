@@ -138,6 +138,62 @@ def check_if_valid_input(geo_input, pingDelays):
                     return False            
     return True
 
+def get_random_64node(minority_size):
+    geo_input = {}
+    us_europe_ids = get_us_europe_validators(1)
+    minority_ids = get_us_europe_validators(0)
+
+    # randomly get minorities, it is in multiples of 2
+    x = minority_size
+    while x > 0:
+        random_loc = random.choice(minority_ids)
+        if random_loc in geo_input.keys():
+            geo_input[random_loc] = 1 + geo_input[random_loc]
+        else:
+            geo_input[random_loc] = 1
+        x = x - 1
+    # fill in the remaining seats with majority, each location has six
+    majority_size = COMMITTEE_SIZE - minority_size
+    while majority_size > 0:
+        random_loc = random.choice(us_europe_ids)
+        if random_loc in geo_input.keys():
+            geo_input[random_loc] = 1 + geo_input[random_loc]
+        else:
+            geo_input[random_loc] = 1
+        majority_size = majority_size -1 
+    return geo_input
+
+def get_fixed_64node(minority_size):
+    geo_input = {}
+    
+    # 20 each from San Jose and Helinski
+    geo_input[23] = 20
+    geo_input[45] = 20
+    
+    # select the rest of validators. We picked these locations as we observed these two buckets in most networks. 
+    us_europe_ids = get_us_europe_validators(1)
+    non_us_europe_ids = get_us_europe_validators(0)
+
+    # randomly get Non US Europe
+    x = minority_size
+    while x > 0:
+        random_loc = random.choice(non_us_europe_ids)
+        if random_loc in geo_input.keys():
+            geo_input[random_loc] = 1 + geo_input[random_loc]
+        else:
+            geo_input[random_loc] = 1
+        x = x - 1
+    # fill in the remaining seats with majority, each location has six
+    majority_size = COMMITTEE_SIZE - minority_size - 40
+    while majority_size > 0:
+        random_loc = random.choice(us_europe_ids)
+        if random_loc in geo_input.keys():
+            geo_input[random_loc] = 1 + geo_input[random_loc]
+        else:
+            geo_input[random_loc] = 1
+        majority_size = majority_size -1 
+    return geo_input
+
 if __name__ == "__main__":
 
 
@@ -204,13 +260,78 @@ if __name__ == "__main__":
     #         sleep(1)
     #         i = i +1
     
+    # ##################################################################
+    # ### 64 nodes. Majority in US/Europe. Keep varying the minority####
+    # ### We pick all nodes from these locations randomly ##############
+    # ##################################################################
+    # geodec = GeoDec()
+    
+    # runs  = 2
+    
+    # while runs > 0:
+    #     runs = runs - 1
+        
+    #     minority_count = 24
+        
+    #     while minority_count > 0:
+            
+    #         geo_input = get_us_europe_rest_distribution(minority_count)
+    #         pingDelays = geodec.getPingDelay(geo_input, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")    
+            
+    #         change_location_input("fabfile.py", geo_input)
+    #         if(check_if_valid_input(geo_input, pingDelays)):
+    #             now = datetime.datetime.now()
+    #             print("==============================================================")
+    #             print(str(now) + " Running "+ str(runs) +" test with " + str(geo_input) + " minority count is "+ str(minority_count))
+
+    #             subprocess.run(["fab", "remote"])
+
+    #             print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    #             sleep(1)
+ 
+    #             minority_count = minority_count - 4
+    #     ##################################################################
+    # ### 64 nodes. Majority in US/Europe. Keep varying the minority####
+    # ### We pick all nodes from these locations randomly ##############
+    # ##################################################################
+    # ####  64node-random-mean-geo-dec-metrics.csv
+    # geodec = GeoDec()
+    
+    # runs  = 2
+    
+    # while runs > 0:
+    #     runs = runs - 1
+        
+    #     minority_count = 24
+        
+    #     while minority_count > 0:
+    #         geo_input = get_random_64node(minority_count)
+    #         pingDelays = geodec.getPingDelay(geo_input, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")    
+    #         print("I am here")
+
+    #         change_location_input("fabfile.py", geo_input)
+    #         if(check_if_valid_input(geo_input, pingDelays)):
+    #             print("I am here")
+    #             now = datetime.datetime.now()
+    #             print("==============================================================")
+    #             print(str(now) + " Running "+ str(runs) +" test with " + str(geo_input) + " minority count is "+ str(minority_count))
+
+    #             subprocess.run(["fab", "remote"])
+
+    #             print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    #             sleep(1)
+ 
+    #             minority_count = minority_count - 4
+    #         else:
+    #             print("ehat to do ey")
+    #############################################################################
+    ### 64 nodes. Majority in San Jose and Helinski => 40% of entire network.####
+    ### We pick all nodes from other locations randomly #########################
     ##################################################################
-    ### 64 nodes. Majority in US/Europe. Keep varying the minority####
-    ### We pick all nodes from these locations randomly ##############
-    ##################################################################
+    ####  64node-fixed-mean-geo-dec-metrics.csv
     geodec = GeoDec()
     
-    runs  = 2
+    runs  = 5
     
     while runs > 0:
         runs = runs - 1
@@ -218,15 +339,14 @@ if __name__ == "__main__":
         minority_count = 24
         
         while minority_count > 0:
-            
-            geo_input = get_us_europe_rest_distribution(minority_count)
+            geo_input = get_fixed_64node(minority_count)
             pingDelays = geodec.getPingDelay(geo_input, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")    
-            
-            change_location_input("fabfile.py", geo_input)
+
+            # change_location_input("fabfile.py", geo_input)
             if(check_if_valid_input(geo_input, pingDelays)):
                 now = datetime.datetime.now()
                 print("==============================================================")
-                print(str(now) + " Running "+ str(runs) +" test with " + str(geo_input) + " minority count is "+ str(minority_count))
+                print(str(now) + " Running "+ str(runs) +" test with " + str(geo_input) + " Non Europe and US count is "+ str(minority_count))
 
                 subprocess.run(["fab", "remote"])
 
@@ -234,7 +354,8 @@ if __name__ == "__main__":
                 sleep(1)
  
                 minority_count = minority_count - 4
-    
+            else:
+                print("ehat to do ey")
     #######################################################    
     #### BASIC RUNS #######################################
     #######################################################    
