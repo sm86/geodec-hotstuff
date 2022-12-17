@@ -16,11 +16,12 @@ df.rename(columns={'total_dist' : '$GDI^{V}$'}, inplace=True)
 # calculate the correlation matrix
 corr = df.corr()
 # plot the heatmap
-plot = sns.heatmap(corr, cmap="Blues",
-        xticklabels=corr.columns,
-        yticklabels=corr.columns, annot=True)
-fig = plot.get_figure()
-fig.savefig("benchmark/Utils/correlation-plot.png") 
+with sns.plotting_context("talk"):
+        plot = sns.heatmap(corr, cmap="Blues",
+                xticklabels=corr.columns,
+                yticklabels=corr.columns, annot=True)
+        fig = plot.get_figure()
+        fig.savefig("benchmark/Utils/correlation-plot.png") 
 
 print(corr)
 print(pearsonr(data['liveliness_avg'], data['two_third_dist']))

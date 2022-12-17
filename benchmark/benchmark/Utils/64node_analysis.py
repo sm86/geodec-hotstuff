@@ -26,6 +26,10 @@ def non_us_europe_count(data):
     return (64-count)
 
 all_data = pd.read_csv("/home/ubuntu/results/64node-random-mean-geo-dec-metrics.csv")
+fixed_data = pd.read_csv("/home/ubuntu/results/64node-fixed-mean-geo-dec-metrics.csv")
+# check_data = pd.read_csv("/home/ubuntu/results/64node-check-mean-geo-dec-metrics.csv")
+all_data = all_data.append(fixed_data)
+# all_data = all_data.append(check_data)
 run_ids = list(set(all_data['run_id'].values.tolist()))
 
 results_df = pd.DataFrame(columns=['run_id', 'minority_count', 'minority_jailed_5', 'total_jailed_5', 'non_us_europe_count', 'GDI_before', 'GDI_after', 'GDI_solution', 'GDI_percent_decrease', 'GDI_percent_decrease_sol' ]) #, 'total_jailed_10', 'minority_jailed_20', 'total_jailed_20', 'minority_jailed_30', 'total_jailed_30', 'is_not_minority_jailed'])
@@ -47,11 +51,8 @@ for run_id in run_ids:
     
     GDI_percent_decrease = ((GDI_before - GDI_after)/GDI_before)*100
    
-    print(data)
     cities = list(set(data['name'].values.tolist()))
-    print(cities)
     print(data[data['is_minority']==True])
-    print(GDI_67)
     GDI_percent_decrease_solution = ((GDI_before - GDI_ours)/GDI_before)*100
     new_data = pd.DataFrame({'run_id' : run_id, 'non_us_europe_count':non_us_europe_count(data), 'minority_count' : data['is_minority'].values.sum(), 'minority_jailed_5': data['is_minory_and_jailed'].values.sum(),
                                 'total_jailed_5': data['is_jailed'].values.sum(),'GDI_before': GDI_before, 'GDI_after': GDI_after, 'GDI_solution': GDI_ours,
@@ -65,8 +66,9 @@ for run_id in run_ids:
 
 # results_df.to_csv('/home/ubuntu/results/minority_jailed_16node.csv', index=False)
 # minority_count_array = list(set(results_df['minority_count'].values.tolist()))
-# summary = results_df.groupby('non_us_europe_count').mean()
+summary = results_df.groupby('minority_jailed_5').mean()
 # summary.to_csv('/home/ubuntu/results/summary_minority_jailed_16node.csv', index=True)
-# print(summary)
+print(summary)
 
 print(results_df)
+summary.to_csv('/home/ubuntu/results/64node-results.csv')
