@@ -399,6 +399,10 @@ impl Core {
     }
 
     async fn handle_tc(&mut self, tc: TC) -> ConsensusResult<()> {
+        tc.verify(&self.committee)?;
+        if tc.round < self.round {
+            return Ok(());
+        }
         self.advance_round(tc.round).await;
         if self.name == self.leader_elector.get_leader(self.round) {
             self.generate_proposal(Some(tc)).await;
