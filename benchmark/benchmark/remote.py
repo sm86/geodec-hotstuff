@@ -6,6 +6,8 @@ from os.path import basename, splitext
 from time import sleep
 from math import ceil
 from os.path import join
+
+import csv
 import subprocess
 import pandas as pd
 
@@ -95,11 +97,18 @@ class Bench:
         except GroupException as e:
             raise BenchError('Failed to kill nodes', FabricError(e))
 
-    def _select_hosts(self, len):
-        f = open('../../IP.txt', 'r+')
-        addrs = [line.strip() for line in f.readlines()]
-        f.close()
-        return addrs[:len]
+    def _select_hosts(self, num):
+        addrs = [] 
+        # Retrieve values based on your scripts, note we use Internal IP addresses
+        with open(self.settings.ip_file, 'r') as f:
+            # If you used the GCP scripts from here https://github.com/sm86/gcp-scripts      
+            if(self.settings.provider == "google_compute_engine"):
+                reader = csv.DictReader(f)
+                for row in reader:
+                    addrs.append(row['Internal IP'])
+            else:
+                 addrs = [line.strip() for line in f.readlines()]
+        return addrs[:num]
         # # Ensure there are enough hosts.
         # hosts = self.manager.hosts()
         # if sum(len(x) for x in hosts.values()) < nodes:
@@ -131,7 +140,7 @@ class Bench:
                 f'./{self.settings.repo_name}/target/release/'
             )
         ]
-        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+        g = Group(*hosts, user=self.settings.key_name, connect_kwargs=self.connect)
         g.run(' && '.join(cmd), hide=True)
 
     def _config(self, hosts, node_parameters):
@@ -256,21 +265,23 @@ class Bench:
     def run(self, bench_parameters_dict, node_parameters_dict, geoInput, debug=False):
         assert isinstance(debug, bool)
         Print.heading('Starting remote benchmark')
+
         try:
             bench_parameters = BenchParameters(bench_parameters_dict)
             node_parameters = NodeParameters(node_parameters_dict)
         except ConfigError as e:
             raise BenchError('Invalid nodes or bench parameters', e)
-
-        geodec = GeoDec()
-        servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
-        pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
+        # geodec = GeoDec()
+        # servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
+        # pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
 
         # Select which hosts to use.
-        selected_hosts = self._select_hosts(len(servers))
-        if not selected_hosts:
+        selected_hosts = self._select_hosts(bench_parameters.nodes[0])
+        print(selected_hosts)
+        if len(selected_hosts) < bench_parameters.nodes[0]:
             Print.warn('There are not enough instances available')
             return
+
 
         # Update nodes.
         try:
@@ -279,14 +290,14 @@ class Bench:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
         
-        # # Set delay parameters.
-        try:
-            self._configDelay(selected_hosts)
-            print("configured delays")
-            self._addDelays(servers, pingDelays, self.settings.interface)
-        except (subprocess.SubprocessError, GroupException) as e:
-            e = FabricError(e) if isinstance(e, GroupException) else e
-            Print.error(BenchError('Failed to initalize delays', e))
+        # # # Set delay parameters.
+        # try:
+        #     self._configDelay(selected_hosts)
+        #     print("configured delays")
+        #     self._addDelays(servers, pingDelays, self.settings.interface)
+        # except (subprocess.SubprocessError, GroupException) as e:
+        #     e = FabricError(e) if isinstance(e, GroupException) else e
+        #     Print.error(BenchError('Failed to initalize delays', e))
          
         # Run benchmarks.
         for n in bench_parameters.nodes:
@@ -294,49 +305,49 @@ class Bench:
                 Print.heading(f'\nRunning {n} nodes (input rate: {r:,} tx/s)')
                 hosts = selected_hosts[:n]
 
-                # Upload all configuration files.
-                try:
-                    self._config(hosts, node_parameters)
-                except (subprocess.SubprocessError, GroupException) as e:
-                    e = FabricError(e) if isinstance(e, GroupException) else e
-                    Print.error(BenchError('Failed to configure nodes', e))
-                    continue
+        #         # Upload all configuration files.
+        #         try:
+        #             self._config(hosts, node_parameters)
+        #         except (subprocess.SubprocessError, GroupException) as e:
+        #             e = FabricError(e) if isinstance(e, GroupException) else e
+        #             Print.error(BenchError('Failed to configure nodes', e))
+        #             continue
 
-                # Do not boot faulty nodes.
-                faults = bench_parameters.faults
-                hosts = hosts[:n-faults]
+        #         # Do not boot faulty nodes.
+        #         faults = bench_parameters.faults
+        #         hosts = hosts[:n-faults]
                 
-                run_id_array = []
+        #         run_id_array = []
                 
-                # Run the benchmark.
-                for i in range(bench_parameters.runs):
-                    run_id = GeoLogParser.get_new_run_id()
-                    Print.heading(f'Run {i+1}/{bench_parameters.runs} with run_id {run_id}')
-                    try:
-                        self._run_single(
-                            hosts, r, bench_parameters, node_parameters, debug
-                        )
-                        self._logs(hosts, faults, servers, run_id) #.print(PathMaker.result_file(
-                            # faults, n, r, bench_parameters.tx_size
-                        # ))
-                        run_id_array.append(run_id)
-                    except (subprocess.SubprocessError, GroupException, ParseError) as e:
-                        self.kill(hosts=hosts)
-                        if isinstance(e, GroupException):
-                            e = FabricError(e)
-                        Print.error(BenchError('Benchmark failed', e))
-                        continue
+        #         # Run the benchmark.
+        #         for i in range(bench_parameters.runs):
+        #             run_id = GeoLogParser.get_new_run_id()
+        #             Print.heading(f'Run {i+1}/{bench_parameters.runs} with run_id {run_id}')
+        #             try:
+        #                 self._run_single(
+        #                     hosts, r, bench_parameters, node_parameters, debug
+        #                 )
+        #                 self._logs(hosts, faults, servers, run_id) #.print(PathMaker.result_file(
+        #                     # faults, n, r, bench_parameters.tx_size
+        #                 # ))
+        #                 run_id_array.append(run_id)
+        #             except (subprocess.SubprocessError, GroupException, ParseError) as e:
+        #                 self.kill(hosts=hosts)
+        #                 if isinstance(e, GroupException):
+        #                     e = FabricError(e)
+        #                 Print.error(BenchError('Benchmark failed', e))
+        #                 continue
                 
-                aggregated_results = GeoLogParser.aggregate_runs(run_id_array)
-                print(aggregated_results)
-                aggregated_results.to_csv('/home/ubuntu/results/64node-fixed-mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
+        #         aggregated_results = GeoLogParser.aggregate_runs(run_id_array)
+        #         print(aggregated_results)
+        #         aggregated_results.to_csv('/home/ubuntu/results/64node-fixed-mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
 
-        # Delte delay parameters.
-        try:
-            self._deleteDelay(selected_hosts)
-        except (subprocess.SubprocessError, GroupException) as e:
-            e = FabricError(e) if isinstance(e, GroupException) else e
-            Print.error(BenchError('Failed to initalize delays', e))
+        # # Delte delay parameters.
+        # try:
+        #     self._deleteDelay(selected_hosts)
+        # except (subprocess.SubprocessError, GroupException) as e:
+        #     e = FabricError(e) if isinstance(e, GroupException) else e
+        #     Print.error(BenchError('Failed to initalize delays', e))
             
     ################ GEODEC Emulator methods #########################
     def _configDelay(self, hosts):
