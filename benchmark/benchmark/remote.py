@@ -78,7 +78,7 @@ class Bench:
         ]
         hosts = self.manager.hosts(flat=True)
         try:
-            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+            g = Group(*hosts, user=self.settings.key_name, connect_kwargs=self.connect)
             g.run(' && '.join(cmd), hide=True)
             Print.heading(f'Initialized testbed of {len(hosts)} nodes')
         except (GroupException, ExecutionError) as e:
@@ -92,7 +92,7 @@ class Bench:
         delete_logs = CommandMaker.clean_logs() if delete_logs else 'true'
         cmd = [delete_logs, f'({CommandMaker.kill()} || true)']
         try:
-            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+            g = Group(*hosts, user=self.settings.key_name, connect_kwargs=self.connect)
             g.run(' && '.join(cmd), hide=True)
         except GroupException as e:
             raise BenchError('Failed to kill nodes', FabricError(e))
@@ -122,7 +122,7 @@ class Bench:
     def _background_run(self, host, command, log_file):
         name = splitext(basename(log_file))[0]
         cmd = f'tmux new -d -s "{name}" "{command} |& tee {log_file}"'
-        c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
+        c = Connection(host, user=self.settings.key_name, connect_kwargs=self.connect)
         output = c.run(cmd, hide=True)
         self._check_stderr(output)
 
@@ -177,13 +177,13 @@ class Bench:
 
         # Cleanup all nodes.
         cmd = f'{CommandMaker.cleanup()} || true'
-        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+        g = Group(*hosts, user=self.settings.key_name, connect_kwargs=self.connect)
         g.run(cmd, hide=True)
 
         # Upload configuration files.
         progress = progress_bar(hosts, prefix='Uploading config files:')
         for i, host in enumerate(progress):
-            c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
+            c = Connection(host, user=self.settings.key_name, connect_kwargs=self.connect)
             c.put(PathMaker.committee_file(), '.')
             c.put(PathMaker.key_file(i), '.')
             c.put(PathMaker.parameters_file(), '.')
@@ -238,29 +238,45 @@ class Bench:
             sleep(ceil(duration / 20))
         self.kill(hosts=hosts, delete_logs=False)
 
-    def _logs(self, hosts, faults, servers, run_id):
-        # Delete local logs (if any).
+    def _logs(self, hosts, faults): #, servers, run_id):
+       # Delete local logs (if any).
         cmd = CommandMaker.clean_logs()
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
-
-        hosts_df = pd.DataFrame(columns=['ip', 'node_num'])
 
         # Download log files.
         progress = progress_bar(hosts, prefix='Downloading logs:')
         for i, host in enumerate(progress):
-            c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
+            c = Connection(host, user=self.settings.key_name, connect_kwargs=self.connect)
             c.get(PathMaker.node_log_file(i), local=PathMaker.node_log_file(i))
             c.get(
                 PathMaker.client_log_file(i), local=PathMaker.client_log_file(i)
             )
-            # mapping HOST <---> i 
-            new_data = pd.DataFrame({'ip':host, 'node_num':i},  index=[0])
-            hosts_df = pd.concat([hosts_df, new_data], ignore_index = True)
-        
-        servers = pd.merge(servers, hosts_df, on='ip')
+
         # Parse logs and return the parser.
         Print.info('Parsing logs and computing performance...')
-        return LogParser.process(PathMaker.logs_path(), faults=faults, servers=servers, run_id =run_id)
+        return LogParser.process(PathMaker.logs_path(), faults=faults)
+        # # Delete local logs (if any).
+        # cmd = CommandMaker.clean_logs()
+        # subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+
+        # hosts_df = pd.DataFrame(columns=['ip', 'node_num'])
+
+        # # Download log files.
+        # progress = progress_bar(hosts, prefix='Downloading logs:')
+        # for i, host in enumerate(progress):
+        #     c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
+        #     c.get(PathMaker.node_log_file(i), local=PathMaker.node_log_file(i))
+        #     c.get(
+        #         PathMaker.client_log_file(i), local=PathMaker.client_log_file(i)
+        #     )
+        #     # mapping HOST <---> i 
+        #     new_data = pd.DataFrame({'ip':host, 'node_num':i},  index=[0])
+        #     hosts_df = pd.concat([hosts_df, new_data], ignore_index = True)
+        
+        # servers = pd.merge(servers, hosts_df, on='ip')
+        # # Parse logs and return the parser.
+        # Print.info('Parsing logs and computing performance...')
+        # return LogParser.process(PathMaker.logs_path(), faults=faults, servers=servers, run_id =run_id)
 
     def run(self, bench_parameters_dict, node_parameters_dict, geoInput, debug=False):
         assert isinstance(debug, bool)
@@ -271,8 +287,13 @@ class Bench:
             node_parameters = NodeParameters(node_parameters_dict)
         except ConfigError as e:
             raise BenchError('Invalid nodes or bench parameters', e)
-        # geodec = GeoDec()
-        # servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", "/home/ubuntu/IP.txt")
+        
+        isGeoRemote = True
+        if not geoInput:
+            isGeoRemote = False
+            
+        geodec = GeoDec()
+        # servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", self.settings.)
         # pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
 
         # Select which hosts to use.
@@ -305,38 +326,41 @@ class Bench:
                 Print.heading(f'\nRunning {n} nodes (input rate: {r:,} tx/s)')
                 hosts = selected_hosts[:n]
 
-        #         # Upload all configuration files.
-        #         try:
-        #             self._config(hosts, node_parameters)
-        #         except (subprocess.SubprocessError, GroupException) as e:
-        #             e = FabricError(e) if isinstance(e, GroupException) else e
-        #             Print.error(BenchError('Failed to configure nodes', e))
-        #             continue
+                # Upload all configuration files.
+                try:
+                    self._config(hosts, node_parameters)
+                except (subprocess.SubprocessError, GroupException) as e:
+                    e = FabricError(e) if isinstance(e, GroupException) else e
+                    Print.error(BenchError('Failed to configure nodes', e))
+                    continue
 
-        #         # Do not boot faulty nodes.
-        #         faults = bench_parameters.faults
-        #         hosts = hosts[:n-faults]
+                # Do not boot faulty nodes.
+                faults = bench_parameters.faults
+                hosts = hosts[:n-faults]
                 
         #         run_id_array = []
                 
-        #         # Run the benchmark.
-        #         for i in range(bench_parameters.runs):
+                # Run the benchmark.
+                for i in range(bench_parameters.runs):
         #             run_id = GeoLogParser.get_new_run_id()
         #             Print.heading(f'Run {i+1}/{bench_parameters.runs} with run_id {run_id}')
-        #             try:
-        #                 self._run_single(
-        #                     hosts, r, bench_parameters, node_parameters, debug
-        #                 )
-        #                 self._logs(hosts, faults, servers, run_id) #.print(PathMaker.result_file(
-        #                     # faults, n, r, bench_parameters.tx_size
-        #                 # ))
+                    try:
+                        self._run_single(
+                            hosts, r, bench_parameters, node_parameters, debug
+                        )
+                        self._logs(hosts, faults).print(PathMaker.result_file(
+                            faults, n, r, bench_parameters.tx_size
+                        ))
+                        # self._logs(hosts, faults, servers, run_id) #.print(PathMaker.result_file(
+                            # faults, n, r, bench_parameters.tx_size
+                        # ))
         #                 run_id_array.append(run_id)
-        #             except (subprocess.SubprocessError, GroupException, ParseError) as e:
-        #                 self.kill(hosts=hosts)
-        #                 if isinstance(e, GroupException):
-        #                     e = FabricError(e)
-        #                 Print.error(BenchError('Benchmark failed', e))
-        #                 continue
+                    except (subprocess.SubprocessError, GroupException, ParseError) as e:
+                        self.kill(hosts=hosts)
+                        if isinstance(e, GroupException):
+                            e = FabricError(e)
+                        Print.error(BenchError('Benchmark failed', e))
+                        continue
                 
         #         aggregated_results = GeoLogParser.aggregate_runs(run_id_array)
         #         print(aggregated_results)
@@ -353,13 +377,13 @@ class Bench:
     def _configDelay(self, hosts):
         Print.info('Delay qdisc initalization...')
         cmd = CommandMaker.initalizeDelayQDisc(self.settings.interface)
-        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+        g = Group(*hosts, user=self.settings.key_name, connect_kwargs=self.connect)
         g.run(cmd, hide=True)
 
     def _deleteDelay(self, hosts):
         Print.info('Delete qdisc configurations...')
         cmd = CommandMaker.deleteDelayQDisc(self.settings.interface)
-        g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
+        g = Group(*hosts, user=self.settings.key_name, connect_kwargs=self.connect)
         g.run(cmd, hide=True)
 
     def _addDelays(self, servers, pingDelays, interface):
@@ -377,7 +401,7 @@ class Bench:
                     counter = counter + 1
             host = source['ip']
             # execute the command for source IP
-            c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
+            c = Connection(host, user=self.settings.key_name, connect_kwargs=self.connect)
             c.run(source_commands, hide=True)
 
     def _getDelayCommand(self, n, ip, interface, delay, delay_dev):

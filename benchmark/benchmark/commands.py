@@ -50,8 +50,8 @@ class CommandMaker:
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        return (f'./client --size {size} '
-                f'--rate {rate} --timeout {timeout} --nodes {address} {address}')
+        return (f'./client {address} --size {size} '
+                f'--rate {rate} --timeout {timeout} {nodes}')
 
     @staticmethod
     def kill():
