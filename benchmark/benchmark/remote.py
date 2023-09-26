@@ -130,7 +130,11 @@ class Bench:
         Print.info(
             f'Updating {len(hosts)} nodes (branch "{self.settings.branch}")...'
         )
+        # Check if the repo directory exists
+        check_repo_cmd = f'[ -d {self.settings.repo_name} ] || git clone {self.settings.repo_url}'
+
         cmd = [
+            check_repo_cmd,
             f'(cd {self.settings.repo_name} && git fetch -f)',
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
@@ -292,7 +296,7 @@ class Bench:
         if not geoInput:
             isGeoRemote = False
             
-        geodec = GeoDec()
+        # geodec = GeoDec()
         # servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", self.settings.)
         # pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
 
@@ -351,9 +355,6 @@ class Bench:
                         self._logs(hosts, faults).print(PathMaker.result_file(
                             faults, n, r, bench_parameters.tx_size
                         ))
-                        # self._logs(hosts, faults, servers, run_id) #.print(PathMaker.result_file(
-                            # faults, n, r, bench_parameters.tx_size
-                        # ))
         #                 run_id_array.append(run_id)
                     except (subprocess.SubprocessError, GroupException, ParseError) as e:
                         self.kill(hosts=hosts)
