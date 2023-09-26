@@ -7,7 +7,10 @@ class SettingsError(Exception):
 
 class Settings:
     def __init__(self, testbed, key_name, key_path, consensus_port, mempool_port,
-                 front_port, repo_name, repo_url, branch, instance_type, aws_regions, geodec_interface, geodec_ip_file, geodec_servers_file, geodec_ping_grouped_file, geodec_ping_file):
+                 front_port, repo_name, repo_url, branch, instance_type, aws_regions, 
+                 geodec_interface, geodec_servers_file, geodec_ping_grouped_file, geodec_ping_file,
+                 provider, ip_file 
+                ):
         if isinstance(aws_regions, list):
             regions = aws_regions
         else:
@@ -41,11 +44,14 @@ class Settings:
         self.aws_regions = regions
         
         self.interface = geodec_interface
-        self.ip_file = geodec_ip_file
         self.servers_file = geodec_servers_file
         self.pings_file = geodec_ping_file
         self.ping_grouped_file = geodec_ping_grouped_file
 
+        self.provider = provider
+        self.ip_file = ip_file
+
+        
     @classmethod
     def load(cls, filename):
         try:
@@ -66,9 +72,10 @@ class Settings:
                 data['instances']['regions'],
                 data['geodec']['interface'], 
                 data['geodec']['servers_file'], 
-                data['geodec']['ip_file'],
                 data['geodec']['pings_grouped_file'],
-                data['geodec']['pings_file']
+                data['geodec']['pings_file'],
+                data['configuration']['provider'],
+                data['configuration']['ip_file']
             )
         except (OSError, JSONDecodeError) as e:
             raise SettingsError(str(e))
