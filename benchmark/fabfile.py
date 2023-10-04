@@ -126,22 +126,21 @@ def remote(ctx):
 
 @task
 def georemote(ctx):
-    ''' Run benchmarks on ComputeCanada/AWS '''
-    # test GeoInput  
-    geoInput = {23: 20, 45: 20, 50: 1, 46: 1, 95: 1, 169: 1, 18: 1, 7: 2, 37: 1, 24: 2, 16: 1, 13: 1, 47: 2, 54: 1, 19: 2, 89: 1, 4: 1, 76: 1, 12: 2, 22: 1, 140: 1}
+    ''' Run benchmarks with induced latencies'''
+    geoInput = {1: 1, 2: 1, 3: 1, 4 : 1}
     
     bench_params = {
         'faults': 0,
-        'nodes': [64],
+        'nodes': [4],
         'rate': [20000],
         'tx_size': 512,
-        'duration': 300,
-        'runs': 5,
+        'duration': 20,
+        'runs': 1,
     }
     node_params = {
         'consensus': {
-            'timeout_delay': 50_000,
-            'sync_retry_delay': 50_000,
+            'timeout_delay': 500_000,
+            'sync_retry_delay': 500_000,
         },
         'mempool': {
             'gc_depth': 50,

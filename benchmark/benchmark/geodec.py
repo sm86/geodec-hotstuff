@@ -7,7 +7,7 @@ import pandas as pd
 #########################################################################################
 #########################################################################################
 #### GeoDec emulator to study impacts of geospatial diversity on blockchain networks ####
-############# Created by Shashank Motepalli, Arno Jacobsen ##############################
+############# https://arxiv.org/abs/2305.17771 ##########################################
 #########################################################################################
 #########################################################################################
 
@@ -21,36 +21,31 @@ class GeoDec:
         return selected_servers
     
     # get all servers based on count and location 
-    def getAllServers(self, geoInput, servers_file, ip_file):
-
-        servers = self._getServers(geoInput, servers_file)
-        updated = servers
+    def getAllServers(self, geoInput, geolocations_file, validators_ip):
+        validators_location = self._getServers(geoInput, geolocations_file)
+        updated = validators_location
         for key in geoInput:
             num = geoInput[key]
             while num > 1 :
-                data = servers.query(f'id == {key}').copy()
+                data = validators_location.query(f'id == {key}').copy()
                 data['name'] = data['name']+str(num)
                 updated = pd.concat([updated, data], ignore_index = True)
                 num = num - 1
         # adding IP address to servers
-        updated = self._addIPtoServers(updated, ip_file="/home/ubuntu/IP.txt")
+        updated = self._addIPtoServers(updated, validators_ip)
         # calculate geospatial diversity index
         valGDI = self._calculateGDI(updated)
         return pd.merge(updated, valGDI, on='name')
 
 
-    def _addIPtoServers(self, servers, ip_file):
+    def _addIPtoServers(self, servers, validators_ip):
         serversIP = servers
-        with open(ip_file) as f:
-            lines = f.readlines()
-            
-            # check the total available IP addresses less than or more than total servers
-            if(len(lines) < len(servers)):
-                print.WARN("ERROR: NEED MORE IP ADDRESSES")
-                return 
-            
-            lines = [line.strip() for line in lines]
-            serversIP = servers.assign(ip=lines[:len(servers)])
+        # check the total available IP addresses less than or more than total servers
+        if(len(validators_ip) < len(servers)):
+            print.WARN("ERROR: NEED MORE IP ADDRESSES")
+            return 
+        # for every server in servers, add an IP address
+        serversIP = servers.assign(ip=validators_ip)   
         return serversIP 
 
     # get distance between two points in 2D array
@@ -102,15 +97,13 @@ class GeoDec:
             dist_df = pd.concat([dist_df, new_data], ignore_index = True)
         return dist_df
     
-    def _aggregatePingDelays(self, pings_file, pings_grouped_file):
-        pings = pd.read_csv(pings_file)
-        # took median to ensure extreme values do not affect the mean
-        pings_grouped = pings.groupby(['source', 'destination']).median()
-        pings_grouped.to_csv(pings_grouped_file)
+    # def _aggregatePingDelays(self, pings_file, pings_grouped_file):
+    #     pings = pd.read_csv(pings_file)
+    #     # took median to ensure extreme values do not affect the mean
+    #     pings_grouped = pings.groupby(['source', 'destination']).median()
+    #     pings_grouped.to_csv(pings_grouped_file)
 
-    def getPingDelay(self, geoInput, pings_grouped_file, pings_file):
-        if os.path.exists(pings_grouped_file) == False:
-            self._aggregatePingDelays(pings_file, pings_grouped_file)
+    def getPingDelay(self, geoInput, pings_grouped_file):
         pingsDelays = pd.read_csv(pings_grouped_file)
         id = list(geoInput.keys())
         pingsDelays = pingsDelays[pingsDelays.source.isin(id) & pingsDelays.destination.isin(id)].query('source != destination')

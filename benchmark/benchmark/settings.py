@@ -8,7 +8,7 @@ class SettingsError(Exception):
 class Settings:
     def __init__(self, testbed, key_name, key_path, consensus_port, mempool_port,
                  front_port, repo_name, repo_url, branch, instance_type, aws_regions, 
-                 geodec_interface, geodec_servers_file, geodec_ping_grouped_file, geodec_ping_file,
+                 geodec_interface, geodec_servers_file, geodec_ping_grouped_file,
                  provider, ip_file 
                 ):
         if isinstance(aws_regions, list):
@@ -45,7 +45,6 @@ class Settings:
         
         self.interface = geodec_interface
         self.servers_file = geodec_servers_file
-        self.pings_file = geodec_ping_file
         self.ping_grouped_file = geodec_ping_grouped_file
 
         self.provider = provider
@@ -73,7 +72,6 @@ class Settings:
                 data['geodec']['interface'], 
                 data['geodec']['servers_file'], 
                 data['geodec']['pings_grouped_file'],
-                data['geodec']['pings_file'],
                 data['configuration']['provider'],
                 data['configuration']['ip_file']
             )

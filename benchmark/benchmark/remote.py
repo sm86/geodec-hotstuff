@@ -97,8 +97,9 @@ class Bench:
         except GroupException as e:
             raise BenchError('Failed to kill nodes', FabricError(e))
 
-    def _select_hosts(self, num):
+    def _select_hosts(self, bench_parameters):
         addrs = [] 
+        nodes = max(bench_parameters.nodes)
         # Retrieve values based on your scripts, note we use Internal IP addresses
         with open(self.settings.ip_file, 'r') as f:
             # If you used the GCP scripts from here https://github.com/sm86/gcp-scripts      
@@ -108,7 +109,7 @@ class Bench:
                     addrs.append(row['Internal IP'])
             else:
                  addrs = [line.strip() for line in f.readlines()]
-        return addrs[:num]
+        return addrs[:nodes]
         # # Ensure there are enough hosts.
         # hosts = self.manager.hosts()
         # if sum(len(x) for x in hosts.values()) < nodes:
@@ -291,23 +292,13 @@ class Bench:
             node_parameters = NodeParameters(node_parameters_dict)
         except ConfigError as e:
             raise BenchError('Invalid nodes or bench parameters', e)
-        
-        isGeoRemote = True
-        if not geoInput:
-            isGeoRemote = False
-            
-        # geodec = GeoDec()
-        # servers = geodec.getAllServers(geoInput, "/home/ubuntu/data/servers-2020-07-19.csv", self.settings.)
-        # pingDelays = geodec.getPingDelay(geoInput, "/home/ubuntu/data/pings-2020-07-19-2020-07-20-grouped.csv", "/home/ubuntu/data/pings-2020-07-19-2020-07-20.csv")
 
         # Select which hosts to use.
-        selected_hosts = self._select_hosts(bench_parameters.nodes[0])
+        selected_hosts = self._select_hosts(bench_parameters)
         print(selected_hosts)
-        if len(selected_hosts) < bench_parameters.nodes[0]:
+        if not selected_hosts or (len(selected_hosts) < max(bench_parameters.nodes)):
             Print.warn('There are not enough instances available')
             return
-
-
         # Update nodes.
         try:
             self._update(selected_hosts)
@@ -315,14 +306,23 @@ class Bench:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
         
-        # # # Set delay parameters.
-        # try:
-        #     self._configDelay(selected_hosts)
-        #     print("configured delays")
-        #     self._addDelays(servers, pingDelays, self.settings.interface)
-        # except (subprocess.SubprocessError, GroupException) as e:
-        #     e = FabricError(e) if isinstance(e, GroupException) else e
-        #     Print.error(BenchError('Failed to initalize delays', e))
+        isGeoRemote = True
+        if not geoInput:
+            isGeoRemote = False
+        
+        if(isGeoRemote):
+            geodec = GeoDec()    
+            servers = geodec.getAllServers(geoInput, self.settings.servers_file, selected_hosts)
+            pingDelays = geodec.getPingDelay(geoInput, self.settings.ping_grouped_file)
+     
+            # # Set delay parameters.
+            try:
+                self._configDelay(selected_hosts)
+                print("configured delays")
+                self._addDelays(servers, pingDelays, self.settings.interface)
+            except (subprocess.SubprocessError, GroupException) as e:
+                e = FabricError(e) if isinstance(e, GroupException) else e
+                Print.error(BenchError('Failed to initalize delays', e))
          
         # Run benchmarks.
         for n in bench_parameters.nodes:
@@ -367,12 +367,13 @@ class Bench:
         #         print(aggregated_results)
         #         aggregated_results.to_csv('/home/ubuntu/results/64node-fixed-mean-geo-dec-metrics.csv', mode='a', index=False, header=False)
 
-        # # Delte delay parameters.
-        # try:
-        #     self._deleteDelay(selected_hosts)
-        # except (subprocess.SubprocessError, GroupException) as e:
-        #     e = FabricError(e) if isinstance(e, GroupException) else e
-        #     Print.error(BenchError('Failed to initalize delays', e))
+        # Delte delay parameters.
+        if(isGeoRemote):
+            try:
+                self._deleteDelay(selected_hosts)
+            except (subprocess.SubprocessError, GroupException) as e:
+                e = FabricError(e) if isinstance(e, GroupException) else e
+                Print.error(BenchError('Failed to initalize delays', e))
             
     ################ GEODEC Emulator methods #########################
     def _configDelay(self, hosts):
